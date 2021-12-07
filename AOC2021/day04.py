@@ -3,12 +3,19 @@
 class Board:
     def __init__(self, array):
         numbers = list(map(list, array))
-        diagonal = []
+        diagonal = [[], []]
         for i in range(len(numbers)):
             numbers[i] = tuple([n] for n in numbers[i])
-            diagonal.append(numbers[i][i])
+            diagonal[0].append(numbers[i][i])
+            diagonal[1].append(numbers[i][-i-1])
+        diagonal = list(map(tuple, diagonal))
+
+        rotated = []
+        for i in range(len(numbers))[::-1]:
+            rotated.append(tuple(numbers[j][i] for j in range(len(numbers))))
+
         self.numbers = tuple(numbers)
-        self.diagonal = tuple(diagonal)
+        self.check = tuple(numbers + diagonal + rotated)
         self.won = bool(self.checkWin())
 
     def checkNum(self, nextnum):
@@ -19,32 +26,16 @@ class Board:
                     score = (self.checkWin() or 0) * nextnum
                     if score:
                         self.won = score
-                    return score
+                    return score or None
 
     def checkWin(self):
-        check = lambda: map(lambda line: all(n[0] < 0 for n in line),
-                            self.numbers + (self.diagonal,))
-        for x in range(2):
-            if any(c for c in check()):
-                return self.countNums()
-            self.rotate()
-
-    def countNums(self):
-        total = 0
-        for i in self.numbers:
-            for j in i:
-                if j[0] > 0: total += j[0]
-        return total
-
-    def rotate(self):
-        rotated = []
-        for i in range(len(self.numbers))[::-1]:
-            for j in range(len(self.numbers)):
-                rotated += self.numbers[j][i]
-
-        for i in self.numbers:
-            for j in i:
-                j[0] = rotated.pop(0)
+        check = map(lambda line: all(n[0] < 0 for n in line), self.check)
+        if any(c for c in check):
+            total = 0
+            for i in self.numbers:
+                for j in i:
+                    if j[0] > 0: total += j[0]
+            return total
 
 with open(r'.\input\day04.txt') as file:
     data = file.read()
