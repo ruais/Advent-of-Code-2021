@@ -1,34 +1,41 @@
 # advent of code day 4 by Ruma (Lynn)
 
 class Board:
-    def __init__(self, array):
+    def __init__(self, array, diagonals = True):
         numbers = list(map(list, array))
-        diagonal = [[], []]
-        for i in range(len(numbers)):
+        x = range(max(map(lambda x: len(x), numbers)))
+        y = range(len(numbers))
+        diagonals = (diagonals and x == y) * [[], []]
+        for i in y:
             numbers[i] = tuple([n] for n in numbers[i])
-            diagonal[0].append(numbers[i][i])
-            diagonal[1].append(numbers[i][-i-1])
-        diagonal = list(map(tuple, diagonal))
+            if diagonals:
+                diagonals[0].append(numbers[i][i])
+                diagonals[1].append(numbers[i][-i-1])
+        diagonals = list(map(tuple, diagonals))
 
         rotated = []
-        for i in range(len(numbers))[::-1]:
-            rotated.append(tuple(numbers[j][i] for j in range(len(numbers))))
+        for i in x[::-1]:
+            rotated.append(tuple(numbers[j][i] for j in y))
 
         self.numbers = tuple(numbers)
-        self.check = tuple(numbers + diagonal + rotated)
+        self.check = tuple(numbers + diagonals + rotated)
+        self.won = False
         self.won = bool(self.checkWin())
 
     def checkNum(self, nextnum):
         for i in self.numbers:
             for j in i:
                 if nextnum in j:
-                    j[0] = -1 * j[0] - 1
+                    j[0] = -j[0] - 1
                     score = (self.checkWin() or 0) * nextnum
                     if score:
                         self.won = score
                     return score or None
 
     def checkWin(self):
+        if self.won:
+            return self.won
+
         check = map(lambda line: all(n[0] < 0 for n in line), self.check)
         if any(c for c in check):
             total = 0
@@ -56,7 +63,7 @@ def parse_data(data):
 
     for i in range(len(boards)):
         if boards[i]:
-            boards[i] = Board(boards[i])
+            boards[i] = Board(boards[i], diagonals = False)
         else:
             del boards[i]
 
