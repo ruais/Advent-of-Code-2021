@@ -5,20 +5,20 @@ class Board:
         numbers = list(map(list, array))
         x = range(max(map(lambda x: len(x), numbers)))
         y = range(len(numbers))
+
         diagonals = (diagonals and x == y) * [[], []]
         for i in y:
             numbers[i] = tuple([n] for n in numbers[i])
             if diagonals:
                 diagonals[0].append(numbers[i][i])
                 diagonals[1].append(numbers[i][-i-1])
-        diagonals = list(map(tuple, diagonals))
-
+        diagonals = tuple(map(tuple, diagonals))
         rotated = []
         for i in x[::-1]:
             rotated.append(tuple(numbers[j][i] for j in y))
 
         self.numbers = tuple(numbers)
-        self.check = tuple(numbers + diagonals + rotated)
+        self.check = self.numbers + diagonals + tuple(rotated)
         self.won = False
         self.won = bool(self.checkWin())
 
@@ -27,7 +27,7 @@ class Board:
             for j in i:
                 if nextnum in j:
                     j[0] = -j[0] - 1
-                    score = (self.checkWin() or 0) * nextnum
+                    score = self.won or ((self.checkWin() or 0) * nextnum)
                     if score:
                         self.won = score
                     return score or None
