@@ -5,10 +5,10 @@ class Board:
         numbers = list(map(list, array))
         diagonal = []
         for i in range(len(numbers)):
-            numbers[i] = [[n] for n in numbers[i]]
+            numbers[i] = tuple([n] for n in numbers[i])
             diagonal.append(numbers[i][i])
-        self.numbers = numbers
-        self.diagonal = diagonal
+        self.numbers = tuple(numbers)
+        self.diagonal = tuple(diagonal)
         self.won = bool(self.checkWin())
 
     def checkNum(self, nextnum):
@@ -23,7 +23,7 @@ class Board:
 
     def checkWin(self):
         check = lambda: map(lambda line: all(n[0] < 0 for n in line),
-                            self.numbers + [self.diagonal])
+                            self.numbers + (self.diagonal,))
         for x in range(2):
             if any(c for c in check()):
                 return self.countNums()
