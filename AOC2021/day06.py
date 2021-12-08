@@ -18,12 +18,12 @@ with open(r'.\input\day06.txt') as file:
 
 # 6B
 def fish_pop_growth(data, birthrate, youth, term):
-    fish = (birthrate + youth) * [0]
+    cycle = birthrate + youth
+    fish = cycle * [0]
     for f in data:
         fish[f] += 1
-    for _ in range(term):
-        fish[birthrate] += fish[0]
-        fish.append(fish.pop(0))
+    for i in range(term):
+        fish[(i + birthrate) % cycle] += fish[i % cycle]
     return sum(fish)
 
 print(fish_pop_growth(fish, 7, 2, 256))
