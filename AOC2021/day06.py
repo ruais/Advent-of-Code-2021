@@ -23,7 +23,7 @@ def fish_pop_growth(data, birthrate, youth, term):
         fish[f] += 1
     for _ in range(term):
         fish[birthrate] += fish[0]
-        fish = fish[1:] + [fish[0]]
+        fish.append(fish.pop(0))
     return sum(fish)
 
 print(fish_pop_growth(fish, 7, 2, 256))
