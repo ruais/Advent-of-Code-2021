@@ -123,7 +123,7 @@ plot = Map()
 
 # 5B
 for line in data.split('\n'):
-    match = re.fullmatch(r'(\d+),(\d+) -> (\d+),(\d+)', line)
+    match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
     if match:
         x0, y0, x1, y1 = map(int, match.groups())
         if (x0 == x1 or y0 == y1) or abs(x0 - x1) == abs(y0 - y1):
