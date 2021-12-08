@@ -47,7 +47,7 @@ class Map:
             args = []
         for c in coords:
             c = self.pull(c, False)
-            c[0] = func([c[0]] + args)
+            c[0] = func(*([c[0]] + args))
 
     def lineInteract(self, func, coords0, coords1):
         lenline = max(map(lambda n: abs(coords0[n] - coords1[n]) + 1, range(2)))
@@ -78,11 +78,16 @@ class Map:
         x[1] += 1
         y[1] += 1
 
+        if isinstance(func, (list, tuple)):
+            func, *args = func
+        else:
+            args = []
+
         finds = []
         for i in range(*x):
             for j in range(*y):
                 obj = self.pull((i, j))
-                if obj is not None and (not func or func(obj)):
+                if obj is not None and (not func or func(*([obj] + args))):
                     finds.append(obj)
 
         return tuple(finds)
@@ -126,6 +131,6 @@ for line in data.split('\n'):
     match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
     if match:
         x0, y0, x1, y1 = map(int, match.groups())
-        plot.lineInteract((sum, 1), (x0, y0), (x1, y1))
+        plot.lineInteract((int.__add__, 1), (x0, y0), (x1, y1))
 
 print(len(plot.search(lambda x: x > 1)))
