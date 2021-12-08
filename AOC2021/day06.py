@@ -10,11 +10,11 @@ with open(r'.\input\day06.txt') as file:
 #         for i in range(len(fish[:])):
 #             fish[i] -= 1
 #             if fish[i] < 0:
-#                 fish[i] = birthrate
-#                 fish.append(birthrate + youth)
+#                 fish[i] += birthrate
+#                 fish.append(fish[i] + youth)
 #     return len(fish)
 #
-# print(fish_pop_growth(fish, 6, 2, 80))
+# print(fish_pop_growth(fish, 7, 2, 80))
 
 # 6B
 def fish_pop_growth(data, birthrate, youth, term):
