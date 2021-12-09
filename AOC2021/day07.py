@@ -19,7 +19,7 @@ def minimum_fuel_spend(initial):
     triangle = lambda n: n * (n+1) / 2
 
     prev = None
-    for i in range(sorted(initial)[-1] + 1):
+    for i in range(max(initial)) + 1):
         fuel_spend = sum(map(lambda pos: triangle(abs(pos-i)), initial))
         if prev is not None and fuel_spend >= prev:
             if fuel_spend == prev:
