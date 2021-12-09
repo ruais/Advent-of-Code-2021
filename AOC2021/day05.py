@@ -115,26 +115,32 @@ class Map:
             if not all(x is None for x in y):
                 print(*[str(x) for x in y if x is not None])
 
-import re
+def init():
+    import re
+    global data, plot
 
-with open(r'.\input\day05.txt') as file:
-    data = file.read()
+    with open(r'.\input\day05.txt') as file:
+        data = file.read()
 
-plot = Map()
+    plot = Map()
 
-# # 5A
-# for line in data.split('\n'):
-#     match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
-#     if match:
-#         x0, y0, x1, y1 = map(int, match.groups())
-#         if x0 == x1 or y0 == y1:
-#             plot.lineInteract((sum, 1), (x0, y0), (x1, y1))
+def solveA():
+    init()
+    for line in data.split('\n'):
+        match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
+        if match:
+            x0, y0, x1, y1 = map(int, match.groups())
+            if x0 == x1 or y0 == y1:
+                plot.lineInteract((sum, 1), (x0, y0), (x1, y1))
 
-# 5B
-for line in data.split('\n'):
-    match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
-    if match:
-        x0, y0, x1, y1 = map(int, match.groups())
-        plot.lineInteract((int.__add__, 1), (x0, y0), (x1, y1))
+    print(len(plot.search(lambda x: x > 1)))
 
-print(len(plot.search(lambda x: x > 1)))
+def solveB():
+    init()
+    for line in data.split('\n'):
+        match = re.fullmatch(r'(-?\d+),(-?\d+) -> (-?\d+),(-?\d+)', line)
+        if match:
+            x0, y0, x1, y1 = map(int, match.groups())
+            plot.lineInteract((int.__add__, 1), (x0, y0), (x1, y1))
+
+    print(len(plot.search(lambda x: x > 1)))
