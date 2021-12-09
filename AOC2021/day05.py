@@ -73,6 +73,8 @@ class Map:
     def search(self, func = None, coords0 = None, coords1 = None):
         if not (coords0 or coords1):
             coords0, coords1 = self.range()
+        elif not coords1:
+            coords1 = coords0
         x = sorted([coords0[0], coords1[0]])
         y = sorted([coords0[1], coords1[1]])
         x[1] += 1
@@ -95,6 +97,8 @@ class Map:
     def draw(self, coords0 = None, coords1 = None):
         if not (coords0 or coords1):
             coords0, coords1 = self.range()
+        elif not coords1:
+            coords1 = coords0
         x = sorted([coords0[0], coords1[0]])
         y = sorted([coords0[1], coords1[1]])
         x[1] += 1
