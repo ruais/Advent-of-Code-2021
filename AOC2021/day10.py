@@ -24,27 +24,27 @@ def syntax_error_correction(data):
 
     line_corruptions = []
     line_corrections = []
-    for line in data:
-        line = list(line)
+    for string in data:
+        line = list(string)
         while line:
             try:
                 correction = opengroup('')
                 total = 0
                 for char in correction:
                     total = total * 5 + correction_score[char]
-                line_corrections.append((correction, total))
+                line_corrections.append((string, correction, total))
             except SyntaxError as err:
                 linescore = corruption_score[str(err)[-1]]
-                line_corruptions.append(linescore)
+                line_corruptions.append((string, linescore))
                 break
 
-    return tuple(line_corrections), sum(line_corruptions)
+    return tuple(line_corrections), tuple(line_corruptions)
 
 def solveA():
-    print(syntax_error_correction(data)[1])
+    print(sum([score for line, score in syntax_error_correction(data)[1]]))
 
 def solveB():
     corrections = list(syntax_error_correction(data)[0])
-    corrections.sort(key=lambda x: x[1])
+    corrections.sort(key=lambda x: x[2])
     median = int((len(corrections)-1)/2)
-    print(corrections[median][1])
+    print(corrections[median][2])
