@@ -15,12 +15,12 @@ def syntax_error_correction(data):
                 return correction
             elif line[0] in pairs.values():
                 if line[0] == pairs[match]:
-                    line.pop(0)
-                    return correction
+                    del line[0]
+                    return
                 else:
                     raise SyntaxError(line[0])
             else:
-                correction = opengroup(correction)
+                correction += opengroup(correction) or ''
 
     line_corruptions = []
     line_corrections = []
