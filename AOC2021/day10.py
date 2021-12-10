@@ -62,7 +62,7 @@ def syntax_error_correction(data):
                 for char in correction:
                     total = total * 5 + score[char]
                 line_corrections.append((correction, total))
-            except SyntaxError as err:
+            except SyntaxError:
                 break
 
     return tuple(line_corrections)
