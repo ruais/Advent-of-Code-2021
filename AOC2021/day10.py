@@ -32,7 +32,8 @@ def syntax_error_correction(data):
                 total = 0
                 for char in correction:
                     total = total * 5 + correction_score[char]
-                line_corrections.append((string, correction, total))
+                if total:
+                    line_corrections.append((string, correction, total))
             except SyntaxError as err:
                 linescore = corruption_score[str(err)[-1]]
                 line_corruptions.append((string, linescore))
