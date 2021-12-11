@@ -65,7 +65,7 @@ def init():
 def solveA():
     init()
 
-    findlows()
+    findlows(plot)
     sum_risklevel = sum(map(lambda x: int(x)+1, plot.search((isinstance, str))))
     print(sum_risklevel)
 
