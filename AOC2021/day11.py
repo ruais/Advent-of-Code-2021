@@ -20,6 +20,48 @@ class Plot:
             self.array = [[[0]]]
             self.expand(init1)
 
+    def __getitem__(self, indexes):
+        if not isinstance(indexes, (list, tuple)) or len(indexes) != 2:
+            raise IndexError
+        i, j = self.pos(indexes)
+        if None in (i, j):
+            raise IndexError
+        return self.array[j][i][0]
+
+    def __setitem__(self, indexes, data):
+        if not isinstance(indexes, (list, tuple)) or len(indexes) != 2:
+            raise IndexError
+        i, j = self.pos(indexes)
+        if None in (i, j):
+            raise IndexError
+        self.array[j][i][0] = data
+
+    def __range__(self, coords0, coords1):
+        x0, x1 = sorted([coords0[0], coords1[0]])
+        y0, y1 = sorted([coords0[1], coords1[1]])
+        x1 += 1
+        y1 += 1
+
+        return (x0, y0), (x1, y1)
+
+    def __lin__(self, coords0, coords1):
+        if coords0 == coords1:
+            return (coords0,)
+        steps = max(abs(coords0[n] - coords1[n]) for n in range(2))
+        pos = lambda xy, s: coords0[xy] + round(
+                                s/steps * (coords1[xy] - coords0[xy])
+                                )
+        line = [(pos(0, n), pos(1, n)) for n in range(steps + 1)]
+
+        return tuple(line)
+
+    def __sqr__(self, coords0, coords1):
+        square = []
+        for x in range(coords0[0], coords1[0]):
+            square += [(x, y) for y in range(coords0[1], coords1[1])]
+
+        return tuple(square)
+
     def expand(self, *coords):
         lenx = self.width
         leny = self.height
@@ -61,8 +103,9 @@ class Plot:
         def parsearg(arg):
             keywords = ('t', 'x', 'o', 's')
 
-            surrounds = Plot()
+            surr = set()
             selfinclus = False
+            minx = miny = maxx = maxy = 0
 
             arg = arg[2:].split('|')
             for part in arg:
@@ -79,29 +122,38 @@ class Plot:
                     assert all(len(p) == 1 for p in part)
                     kw = part[0][0]
                     reg = part[-1][0]
+                    if minx > -reg: minx = -reg
+                    if miny > -reg: miny = -reg
+                    if maxx <= reg: maxx = reg + 1
+                    if maxy <= reg: maxy = reg + 1
 
                     if kw == 't':
-                        surrounds.mutateline(1, (-reg,0), (reg,0))
-                        surrounds.mutateline(1, (0,-reg), (0,reg))
+                        surr.update(set(self.__lin__((-reg,0), (reg,0))))
+                        surr.update(set(self.__lin__((0,-reg), (0,reg))))
                     if kw == 'x':
-                        surrounds.mutateline(1, (-reg,-reg), ( reg, reg))
-                        surrounds.mutateline(1, (-reg, reg), ( reg,-reg))
+                        surr.update(set(self.__lin__((-reg,-reg), ( reg, reg))))
+                        surr.update(set(self.__lin__((-reg, reg), ( reg,-reg))))
                     if kw == 'o':
-                        surrounds.mutateline(1, (-reg,-reg), ( reg,-reg))
-                        surrounds.mutateline(1, (-reg, reg), ( reg, reg))
-                        surrounds.mutateline(1, (-reg,-reg), (-reg, reg))
-                        surrounds.mutateline(1, ( reg,-reg), ( reg, reg))
+                        surr.update(set(self.__lin__((-reg,-reg), ( reg,-reg))))
+                        surr.update(set(self.__lin__((-reg, reg), ( reg, reg))))
+                        surr.update(set(self.__lin__((-reg,-reg), (-reg, reg))))
+                        surr.update(set(self.__lin__(( reg,-reg), ( reg, reg))))
                     if kw == 's':
-                        surrounds.mutatesquare(1, (-reg,-reg), (reg, reg))
+                        surr.update(set(self.__sqr__((-reg,-reg), (reg, reg))))
                 else:
+                    range0, range1 = self.__range__(part[0], part[1])
+                    if minx > range0[0]: minx = range0[0]
+                    if miny > range0[1]: miny = range0[1]
+                    if maxx <= range1[0]: maxx = range1[0]
+                    if maxy <= range1[1]: maxy = range1[1]
                     if any(coord == [0, 0] for coord in part):
                         selfinclus = True
-                    surrounds.mutateline(1, part[0], part[-1])
+                    surr.update(set(self.__lin__(part[0], part[-1])))
 
             if not selfinclus:
-                surrounds.mutate(0, (0,0))
+                surr -= {(0,0)}
 
-            return surrounds
+            return surr, (minx, miny), (maxx, maxy)
 
         i, j = self.pos(coords)
         if None not in (i, j):
@@ -117,13 +169,13 @@ class Plot:
                 if arg.startswith('\\'):
                     args[i] = arg[1:]
                 else:
-                    surrounds = parsearg(arg)
+                    surrounds, range0, range1 = parsearg(arg)
 
-                    x0, y0, x1, y1 = surrounds.upper() + surrounds.lower()
+                    x0, y0, x1, y1 = range0 + range1
                     arg = []
                     for y in range(y0, y1 + 1):
                         for x in range(x0, x1 + 1):
-                            if surrounds.pull((x, y)):
+                            if (x,y) in surrounds:
                                 s = self.pull((coords[0]+x, coords[1]+y), data)
                                 arg.append(s)
 
@@ -141,32 +193,14 @@ class Plot:
         alter, args = self.parsefunc(alter)
         for c in coords:
             cargs = self.pull(c, args = args)
-            c = self.pull(c, False)
-            c[0] = alter(*cargs)
+            self[c] = alter(*cargs)
 
     def mutateline(self, alter, coords0, coords1):
-        if coords0 == coords1:
-            self.mutate(alter, coords0)
-            return
-        steps = max(abs(coords0[n] - coords1[n]) for n in range(2))
-        pos = lambda xy, s: coords0[xy] + round(
-                                s/steps * (coords1[xy] - coords0[xy])
-                                )
-        line = [(pos(0, n), pos(1, n)) for n in range(steps + 1)]
-
-        self.mutate(alter, *line)
+        self.mutate(alter, *self.__lin__(coords0, coords1))
 
     def mutatesquare(self, alter, coords0, coords1):
-        x = sorted([coords0[0], coords1[0]])
-        y = sorted([coords0[1], coords1[1]])
-        x[1] += 1
-        y[1] += 1
-
-        square = []
-        for i in range(*x):
-            square += [(i, j) for j in range(*y)]
-
-        self.mutate(alter, *square)
+        coords0, coords1 = self.__range__(coords0, coords1)
+        self.mutate(alter, *self.__sqr__(coords0, coords1))
 
     def search(self, coords0 = None, coords1 = None,
                     filt = None, alter = None, data = True):
