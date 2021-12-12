@@ -1,0 +1,251 @@
+# advent of code day 11 by Ruma (Lynn)
+
+class Plot:
+    def __init__(self, init0 = (0, 0), init1 = ((0,),)):
+        self.x, self.y = init0
+        self.upper = lambda: (self.x, self.y)
+        self.lower = lambda: (self.x+self.width()-1, self.y+self.height()-1)
+        self.range = lambda: (self.upper(), self.lower())
+        self.width = lambda: len(self.array[0])
+        self.height = lambda: len(self.array)
+        self.find = lambda x: x
+        if all(isinstance(j, (list, tuple)) for j in init1):
+            # build from prexisting array (init0 == least coordinates in array)
+            assert all(len(j) == len(init1[0]) for j in init1)
+            self.array = []
+            for j in init1:
+                self.array.append([[i] for i in j])
+        else:
+            # build from coordinates (init0, init1 == opposite corners in array)
+            self.array = [[[0]]]
+            self.expand(init1)
+
+    def expand(self, *coords):
+        lenx = self.width
+        leny = self.height
+        map = self.array
+        for x, y in coords:
+            fixed = self.x <= x, self.y <= y
+            while not(self.x <= x <= self.lower()[0]):
+                if not fixed[0]: self.x -= 1
+                inspos = fixed[0] * lenx()
+                for i in range(leny()):
+                    map[i].insert(inspos, [0])
+
+            while not(self.y <= y <= self.lower()[1]):
+                if not fixed[1]: self.y -= 1
+                map.insert(fixed[1] * leny(), [[0] for _ in range(lenx())])
+
+    def pos(self, coords):
+        x, y = coords
+        i, w = x - self.x, self.width()
+        j, h = y - self.y, self.height()
+        i, j = (n if 0 <= n < range else None for n, range in ((i, w), (j, h)))
+
+        return i, j
+
+    def parsefunc(self, f):
+        args = []
+        if isinstance(f, (list, tuple)) and len(f) > 0:
+            func, *args = f
+        else:
+            func = f
+
+        if not callable(func):
+            func = lambda _, x: x
+            args = [f]
+
+        return func, tuple(args)
+
+    def pull(self, coords, data = True, args = None):
+        def parsearg(arg):
+            keywords = ('t', 'x', 'o', 's')
+
+            surrounds = Plot()
+            selfinclus = False
+
+            arg = arg[2:].split('|')
+            for part in arg:
+                part = [coord.split(',') for coord in part.split(':')]
+                assert len(part) < 3
+                for j in range(len(part)):
+                    if part[j][0] == 'self':
+                        part[j] = [0, 0]
+                        continue
+                    num = part[j][0].strip(' ').strip('-').isnumeric()
+                    part[j] = [int(a) if num else a.strip(' ') for a in part[j]]
+
+                if part[0][0] in keywords:
+                    assert all(len(p) == 1 for p in part)
+                    kw = part[0][0]
+                    reg = part[-1][0]
+
+                    if kw == 't':
+                        surrounds.mutateline(1, (-reg,0), (reg,0))
+                        surrounds.mutateline(1, (0,-reg), (0,reg))
+                    if kw == 'x':
+                        surrounds.mutateline(1, (-reg,-reg), ( reg, reg))
+                        surrounds.mutateline(1, (-reg, reg), ( reg,-reg))
+                    if kw == 'o':
+                        surrounds.mutateline(1, (-reg,-reg), ( reg,-reg))
+                        surrounds.mutateline(1, (-reg, reg), ( reg, reg))
+                        surrounds.mutateline(1, (-reg,-reg), (-reg, reg))
+                        surrounds.mutateline(1, ( reg,-reg), ( reg, reg))
+                    if kw == 's':
+                        surrounds.mutatesquare(1, (-reg,-reg), (reg, reg))
+                else:
+                    if any(coord == [0, 0] for coord in part):
+                        selfinclus = True
+                    surrounds.mutateline(1, part[0], part[-1])
+
+            if not selfinclus:
+                surrounds.mutate(0, (0,0))
+
+            return surrounds
+
+        i, j = self.pos(coords)
+        if None not in (i, j):
+            obj = self.array[j][i]
+            if data: obj = obj[0]
+        else:
+            obj = None
+
+        if args is not None: args = list(args)
+        for i in range(len(args or ())):
+            arg = args[i]
+            if isinstance(arg, str) and arg.strip('\\').startswith('--'):
+                if arg.startswith('\\'):
+                    args[i] = arg[1:]
+                else:
+                    surrounds = parsearg(arg)
+
+                    x0, y0, x1, y1 = surrounds.upper() + surrounds.lower()
+                    arg = []
+                    for y in range(y0, y1 + 1):
+                        for x in range(x0, x1 + 1):
+                            if surrounds.pull((x, y)):
+                                s = self.pull((coords[0]+x, coords[1]+y), data)
+                                arg.append(s)
+
+                    args[i] = tuple(arg) if len(arg) > 1 else arg[0]
+
+        if args is not None:
+            if len(args) == 1 and isinstance(args[0], tuple):
+                args = args[0]
+            return (obj,) + tuple(args)
+        else:
+            return obj
+
+    def mutate(self, alter, *coords):
+        self.expand(*coords)
+        alter, args = self.parsefunc(alter)
+        for c in coords:
+            cargs = self.pull(c, args = args)
+            c = self.pull(c, False)
+            c[0] = alter(*cargs)
+
+    def mutateline(self, alter, coords0, coords1):
+        if coords0 == coords1:
+            self.mutate(alter, coords0)
+            return
+        steps = max(abs(coords0[n] - coords1[n]) for n in range(2))
+        pos = lambda xy, s: coords0[xy] + round(
+                                s/steps * (coords1[xy] - coords0[xy])
+                                )
+        line = [(pos(0, n), pos(1, n)) for n in range(steps + 1)]
+
+        self.mutate(alter, *line)
+
+    def mutatesquare(self, alter, coords0, coords1):
+        x = sorted([coords0[0], coords1[0]])
+        y = sorted([coords0[1], coords1[1]])
+        x[1] += 1
+        y[1] += 1
+
+        square = []
+        for i in range(*x):
+            square += [(i, j) for j in range(*y)]
+
+        self.mutate(alter, *square)
+
+    def search(self, coords0 = None, coords1 = None,
+                    filt = None, alter = None, data = True):
+        if not (coords0 or coords1):
+            coords0, coords1 = self.range()
+        elif not coords1:
+            coords1 = coords0
+        x = sorted([coords0[0], coords1[0]])
+        y = sorted([coords0[1], coords1[1]])
+        x[1] += 1
+        y[1] += 1
+
+        filt, fargs = self.parsefunc(filt or True)
+        alter, aargs = self.parsefunc(alter or self.find)
+
+        finds = []
+        for y2 in range(*y):
+            for x2 in range(*x):
+                obj, *args = self.pull((x2, y2), data, fargs)
+                if obj is not None and filt(*[obj] + args):
+                    _, *args = self.pull((x2, y2), data, aargs)
+                    finds.append(alter(*[obj] + args))
+
+        return tuple(finds)
+
+def plotmap(data):
+    data = tuple(tuple(int(n) for n in line) for line in data.split('\n') if line)
+    return Plot((0,0), data)
+
+def flash(plot):
+    plot.mutatesquare((int.__add__, 1), *plot.range())
+    activecells = list(plot.search(data = False, alter = (
+                lambda c, *neighbour: (c, *(n for n in neighbour if n)), '--o:1'
+                )))
+    flashes = 0
+    while activecells:
+        flashed = 0
+        for i in range(len(activecells))[::-1]:
+            cell = activecells[i][0]
+            neighbour = activecells[i][1:]
+            if cell[0] > 9:
+                flashed += 1
+                cell[0] = 0
+                for n in neighbour:
+                    if n[0] > 0: n[0] += 1
+                del activecells[i]
+        if flashed:
+            flashes += flashed
+        else:
+            activecells = None
+
+    return plot, flashes
+
+def init():
+    global data
+
+    with open(r'.\input\day11.txt') as file:
+        data = file.read()
+
+def solveA():
+    init()
+    plot = plotmap(data)
+
+    flashes = 0
+    for _ in range(100):
+        plot, newflashes = flash(plot)
+        flashes += newflashes
+
+    return flashes
+
+def solveB():
+    init()
+    plot = plotmap(data)
+
+    steps = 0
+    while True:
+        steps += 1
+        plot, flashes = flash(plot)
+        if flashes == plot.width() * plot.height():
+            break
+
+    return steps
