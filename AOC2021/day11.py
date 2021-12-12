@@ -261,17 +261,16 @@ def flash(plot, addneighbours):
     return plot, flashes
 
 def init():
-    global data
-
     with open(r'.\input\day11.txt') as file:
         data = file.read()
 
-def solveA():
-    init()
     plot = plotmap(data)
-    addneighbours = plot.parsefunc((
-                lambda c, *neighbour: (c, *(n for n in neighbour if n)), '--o:1'
-                ))
+    addneighbours = plot.parsefunc((lambda *c: [n for n in c if n], '--o:1'))
+
+    return plot, addneighbours
+
+def solveA():
+    plot, addneighbours = init()
 
     flashes = 0
     for _ in range(100):
@@ -281,11 +280,7 @@ def solveA():
     return flashes
 
 def solveB():
-    init()
-    plot = plotmap(data)
-    addneighbours = plot.parsefunc((
-                lambda c, *neighbour: (c, *(n for n in neighbour if n)), '--o:1'
-                ))
+    plot, addneighbours = init()
 
     steps = 0
     flashes = 0
