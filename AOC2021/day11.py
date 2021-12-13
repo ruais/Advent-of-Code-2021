@@ -232,6 +232,25 @@ class Plot:
 
         return tuple(finds)
 
+    def draw(self, coords0 = None, coords1 = None, alter = None):
+        if not (coords0 or coords1):
+            coords0, coords1 = self.range()
+        elif not coords1:
+            coords1 = coords0
+        coords0, coords1 = self.__range__(coords0, coords1)
+
+        lines = []
+        for y in range(coords0[1], coords1[1]):
+            lines.append(self.search((coords0[0], y), (coords1[0], y),
+                                                                alter = alter))
+
+        space = lambda y: max(len(str(x)) if x is not None else 0 for x in y)
+        space = max(map(space, lines))
+        pad = lambda string: (space-len(string)) * ' ' + string
+        for y in lines:
+            if not all(x is None for x in y):
+                print(*[str(x) for x in y if x is not None])
+
 def plotmap(data):
     data = tuple(tuple(int(n) for n in l) for l in data.split('\n') if l)
     return Plot((0,0), data)
