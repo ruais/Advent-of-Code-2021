@@ -85,7 +85,7 @@ class Plot:
             raise IndexError
         i, j = self.pos(indexes)
         if None in (i, j):
-            raise IndexError
+            return 0
         return self.array[j][i][0]
 
     def __setitem__(self, indexes, data):
@@ -93,7 +93,8 @@ class Plot:
             raise IndexError
         i, j = self.pos(indexes)
         if None in (i, j):
-            raise IndexError
+            self.mutate(data, indexes)
+            return
         self.array[j][i][0] = data
 
     def __range__(self, coords0, coords1):
