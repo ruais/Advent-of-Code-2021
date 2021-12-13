@@ -97,7 +97,12 @@ class Plot:
             return
         self.array[j][i][0] = data
 
-    def __range__(self, coords0, coords1):
+    def __range__(self, coords0 = None, coords1 = None):
+        if not (coords0 or coords1):
+            coords0, coords1 = self.range()
+        elif not coords1:
+            coords1 = coords0
+
         x0, x1 = sorted([coords0[0], coords1[0]])
         y0, y1 = sorted([coords0[1], coords1[1]])
         x1 += 1
@@ -213,10 +218,6 @@ class Plot:
 
     def search(self, coords0 = None, coords1 = None,
                     filt = None, alter = None, data = True):
-        if not (coords0 or coords1):
-            coords0, coords1 = self.range()
-        elif not coords1:
-            coords1 = coords0
         coords0, coords1 = self.__range__(coords0, coords1)
 
         filt, *fargs = self.parsefunc(filt or (lambda x: x is not None))
@@ -233,10 +234,6 @@ class Plot:
         return tuple(finds)
 
     def draw(self, coords0 = None, coords1 = None, alter = None):
-        if not (coords0 or coords1):
-            coords0, coords1 = self.range()
-        elif not coords1:
-            coords1 = coords0
         coords0, coords1 = self.__range__(coords0, coords1)
 
         lines = []
