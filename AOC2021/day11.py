@@ -107,7 +107,7 @@ class Plot:
 
     def __lin__(self, coords0, coords1):
         if coords0 == coords1:
-            return (coords0,)
+            return (tuple(coords0),)
         steps = max(abs(coords0[n] - coords1[n]) for n in range(2))
         pos = lambda xy, s: coords0[xy] + round(
                                 s/steps * (coords1[xy] - coords0[xy])
