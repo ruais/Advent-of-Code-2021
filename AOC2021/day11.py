@@ -222,14 +222,14 @@ class Plot:
         x[1] += 1
         y[1] += 1
 
-        filt, *fargs = self.parsefunc(filt or True)
+        filt, *fargs = self.parsefunc(filt or (lambda x: x is not None))
         alter, *aargs = self.parsefunc(alter or self.find)
 
         finds = []
         for y2 in range(*y):
             for x2 in range(*x):
                 obj, *args = self.pull((x2, y2), data, fargs)
-                if obj is not None and filt(*[obj] + args):
+                if filt(*[obj] + args):
                     _, *args = self.pull((x2, y2), data, aargs)
                     finds.append(alter(*[obj] + args))
 
