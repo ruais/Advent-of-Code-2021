@@ -235,12 +235,12 @@ class Plot:
         return tuple(finds)
 
 def plotmap(data):
-    data = tuple(tuple(int(n) for n in line) for line in data.split('\n') if line)
+    data = tuple(tuple(int(n) for n in l) for l in data.split('\n') if l)
     return Plot((0,0), data)
 
-def flash(plot, addneighbours):
+def flash(plot):
     plot.mutatesquare((int.__add__, 1), *plot.range())
-    activecells = list(plot.search(data = False, alter = addneighbours))
+    activecells = list(cells)
     flashes = 0
     while activecells:
         flashed = 0
@@ -261,31 +261,33 @@ def flash(plot, addneighbours):
     return plot, flashes
 
 def init():
+    global cells
     with open(r'.\input\day11.txt') as file:
         data = file.read()
 
     plot = plotmap(data)
-    addneighbours = plot.parsefunc((lambda *c: [n for n in c if n], '--o:1'))
+    cells = plot.search(data = False,
+                        alter = (lambda *c: [n for n in c if n], '--o:1'))
 
-    return plot, addneighbours
+    return plot
 
 def solveA():
-    plot, addneighbours = init()
+    plot = init()
 
     flashes = 0
     for _ in range(100):
-        plot, newflashes = flash(plot, addneighbours)
+        plot, newflashes = flash(plot)
         flashes += newflashes
 
     return flashes
 
 def solveB():
-    plot, addneighbours = init()
+    plot = init()
 
     steps = 0
     flashes = 0
     while flashes < plot.width() * plot.height():
         steps += 1
-        plot, flashes = flash(plot, addneighbours)
+        plot, flashes = flash(plot)
 
     return steps
