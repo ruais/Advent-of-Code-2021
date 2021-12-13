@@ -217,20 +217,17 @@ class Plot:
             coords0, coords1 = self.range()
         elif not coords1:
             coords1 = coords0
-        x = sorted([coords0[0], coords1[0]])
-        y = sorted([coords0[1], coords1[1]])
-        x[1] += 1
-        y[1] += 1
+        coords0, coords1 = self.__range__(coords0, coords1)
 
         filt, *fargs = self.parsefunc(filt or (lambda x: x is not None))
         alter, *aargs = self.parsefunc(alter or self.find)
 
         finds = []
-        for y2 in range(*y):
-            for x2 in range(*x):
-                obj, *args = self.pull((x2, y2), data, fargs)
+        for y in range(coords0[1], coords1[1]):
+            for x in range(coords0[0], coords1[0]):
+                obj, *args = self.pull((x, y), data, fargs)
                 if filt(*[obj] + args):
-                    _, *args = self.pull((x2, y2), data, aargs)
+                    _, *args = self.pull((x, y), data, aargs)
                     finds.append(alter(*[obj] + args))
 
         return tuple(finds)
