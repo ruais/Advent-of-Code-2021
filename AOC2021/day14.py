@@ -64,7 +64,7 @@ def init():
     rules = {}
     for line in data[1]:
         if not line: continue
-        rules[line[0] + line[1]] = line[0] + line[-1] + line[1]
+        rules[line[:1]] = line[0] + line[-1] + line[1]
 
     return polymer, rules
 
