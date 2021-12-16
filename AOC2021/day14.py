@@ -92,7 +92,7 @@ def els_in_polymer(polymer, rules, depth):
         count_at_depth[pair] = {pair[1]: 1}
 
     # compound set for each layer of depth
-    while depth:
+    while depth > 0:
         count_at_depth = {pair: count_line(rules[pair]) for pair in rules}
         depth -= 1
 
