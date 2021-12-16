@@ -91,7 +91,7 @@ def els_in_polymer(polymer, rules, depth):
 
     # build base set of values for each pair
     for pair in rules:
-        count_at_depth[pair] =  {pair[1]: 1}
+        count_at_depth[pair] = {pair[1]: 1}
 
     # compound set for each layer of depth
     while depth:
