@@ -76,15 +76,13 @@ def els_in_polymer(polymer, rules, depth):
         line = deque(line)
         count = {}
 
-        left = None
+        left = line.popleft()
+        if final: count[left] = 1
         while line:
             right = line.popleft()
-            if not left:
-                if final: count[right] = 1
-            else:
-                pair = left + right
-                for el in count_at_depth[pair]:
-                    count[el] = count.get(el, 0) + count_at_depth[pair][el]
+            pair = left + right
+            for el in count_at_depth[pair]:
+                count[el] = count.get(el, 0) + count_at_depth[pair][el]
             left = right
 
         return count
