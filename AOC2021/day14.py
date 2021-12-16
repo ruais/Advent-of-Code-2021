@@ -1,7 +1,7 @@
 # advent of code day 14 by Ruma (Lynn)
 
-from collections import deque
-
+# from collections import deque
+# 
 # def init():
 #     with open(r'.\input\day14.txt') as file:
 #         data = file.read()
@@ -58,7 +58,7 @@ def init():
 
     data = data.split('\n\n')
 
-    polymer = deque(data[0])
+    polymer = data[0]
 
     data[1] = data[1].split('\n')
     rules = {}
@@ -69,9 +69,13 @@ def init():
     return polymer, rules
 
 def els_in_polymer(polymer, rules, depth):
+    from collections import deque
+
     count_at_depth = {}
     def count_line(line, final = False):
+        line = deque(line)
         count = {}
+
         left = None
         while line:
             right = line.popleft()
@@ -79,24 +83,19 @@ def els_in_polymer(polymer, rules, depth):
                 if final: count[right] = 1
             else:
                 pair = left + right
-                for el in count_at_depth[pair][0]:
-                    count[el] = count.get(el, 0) + count_at_depth[pair][0][el]
+                for el in count_at_depth[pair]:
+                    count[el] = count.get(el, 0) + count_at_depth[pair][el]
             left = right
+
         return count
 
     # build base set of values for each pair
     for pair in rules:
-        count_at_depth[pair] =  [{pair[1]: 1}]
+        count_at_depth[pair] =  {pair[1]: 1}
 
     # compound set for each layer of depth
     while depth:
-        for pair in count_at_depth:
-            new = count_line(deque(rules[pair]))
-            count_at_depth[pair].append(new)
-
-        for pair in count_at_depth:
-            del count_at_depth[pair][0]
-
+        count_at_depth = {pair: count_line(rules[pair]) for pair in rules}
         depth -= 1
 
     return count_line(polymer, final = True)
