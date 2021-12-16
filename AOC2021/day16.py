@@ -9,7 +9,13 @@ class BITSPacket:
         if isinstance(packet, deque):
             self.data = packet
         else:
-            self.data = self.fromhex(packet)
+            self.data = deque()
+            for char in packet:
+                n = int(char, 16)
+                cursor = 8
+                while cursor:
+                    self.data.append(1 if cursor & n else 0)
+                    cursor >>= 1
 
         self.ver = self.clip(3)
         self.typeID = self.clip(3)
@@ -52,17 +58,6 @@ class BITSPacket:
             for sub in self.sub[1:]:
                 n = func[self.typeID](n, int(sub))
             return int(n)
-
-    def fromhex(self, hexpacket):
-        binary = deque()
-        for char in hexpacket:
-            n = int(char, 16)
-            cursor = 8
-            while cursor:
-                binary.append(1 if cursor & n else 0)
-                cursor >>= 1
-
-        return binary
 
     def clip(self, cliplength):
         clip = 0
